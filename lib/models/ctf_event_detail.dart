@@ -1,78 +1,82 @@
 import 'package:hive/hive.dart';
 import 'organizer.dart';
 
-part 'ctf_event.g.dart';
+part 'ctf_event_detail.g.dart';
 
-@HiveType(typeId: 0)
-class CtfEvent extends HiveObject {
+@HiveType(typeId: 1)
+class CtfEventDetail extends HiveObject {
   @HiveField(0)
   final int id;
 
   @HiveField(1)
-  final String title;
+  final int? ctfId;
 
   @HiveField(2)
-  final String? description;
+  final String title;
 
   @HiveField(3)
-  final String? url;
+  final String? description;
 
   @HiveField(4)
-  final String? ctftimeUrl;
+  final String? url;
 
   @HiveField(5)
-  final String? logo;
+  final String? ctftimeUrl;
 
   @HiveField(6)
-  final String? format;
+  final String? logo;
 
   @HiveField(7)
-  final int? formatId;
+  final String? format;
 
   @HiveField(8)
-  final bool? onsite;
+  final int? formatId;
 
   @HiveField(9)
-  final String? restrictions;
+  final bool? onsite;
 
   @HiveField(10)
-  final double? weight;
+  final String? restrictions;
 
   @HiveField(11)
-  final int? participants;
+  final double? weight;
 
   @HiveField(12)
-  final String? location;
+  final int? participants;
 
   @HiveField(13)
-  final String? liveFeed;
+  final String? location;
 
   @HiveField(14)
-  final bool? isVotableNow;
+  final String? liveFeed;
 
   @HiveField(15)
-  final bool? publicVotable;
+  final bool? isVotableNow;
 
   @HiveField(16)
-  final String? prizes;
+  final bool? publicVotable;
 
   @HiveField(17)
-  final DateTime? start;
+  final String? prizes;
 
   @HiveField(18)
-  final DateTime? finish;
+  final DateTime? start;
 
   @HiveField(19)
-  final int? durationSeconds;
+  final DateTime? finish;
 
   @HiveField(20)
-  final List<Organizer> organizers;
+  final int? durationSeconds;
 
   @HiveField(21)
-  bool reminder;
+  final List<Organizer> organizers;
 
-  CtfEvent({
+  @HiveField(22)
+  bool isReminderSet;
+
+  CtfEventDetail({
     required this.id,
+    this.ctfId,
     required this.title,
     this.description,
     this.url,
@@ -93,12 +97,13 @@ class CtfEvent extends HiveObject {
     this.finish,
     this.durationSeconds,
     required this.organizers,
-    this.reminder = false,
+    this.isReminderSet = false,
   });
 
-  factory CtfEvent.fromJson(Map<String, dynamic> json) {
-    return CtfEvent(
+  factory CtfEventDetail.fromJson(Map<String, dynamic> json) {
+    return CtfEventDetail(
       id: json['id'] ?? 0,
+      ctfId: json['ctf_id'],
       title: json['title'] ?? '',
       description: json['description'],
       url: json['url'],
@@ -127,13 +132,14 @@ class CtfEvent extends HiveObject {
                 .map((e) => Organizer.fromJson(e))
                 .toList()
           : [],
-      reminder: json['reminder'] ?? false,
+      isReminderSet: false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'ctf_id': ctfId,
       'title': title,
       'description': description,
       'url': url,
@@ -159,7 +165,7 @@ class CtfEvent extends HiveObject {
             }
           : null,
       'organizers': organizers.map((e) => e.toJson()).toList(),
-      'reminder': reminder,
+      'isReminderSet': isReminderSet,
     };
   }
 }

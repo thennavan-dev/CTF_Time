@@ -1,222 +1,293 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../models/user_settings.dart';
+import '../models/ctf_event.dart';
+import '../models/ctf_event_detail.dart';
+import 'package:provider/provider.dart';
+import '../controllers/card_controller.dart';
+import '../services/reminder_prefs.dart';
+import '../services/notification_service.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  late Box<UserSettings> settingsBox;
-  int selectedMinutes = 60;
-
-  final Map<String, int> options = {
-    "1 Hour Before": 60,
-    "6 Hours Before": 360,
-    "1 Day Before": 1440,
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    settingsBox = Hive.box<UserSettings>('settingsBox');
-    if (settingsBox.isNotEmpty) {
-      selectedMinutes = settingsBox.getAt(0)!.reminderMinutes;
-    }
-  }
-
-  void saveSetting(int minutes) {
-    settingsBox.clear();
-    settingsBox.add(UserSettings(reminderMinutes: minutes));
-    setState(() {
-      selectedMinutes = minutes;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reminder time updated!')),
-    );
-  }
-
-  void _showCustomTimerDialog() {
-    final TextEditingController controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text(
-            "Custom Reminder",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: "Enter minutes before event",
-              hintStyle: TextStyle(color: Colors.white54),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white54),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.tealAccent),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: const Text("Cancel", style: TextStyle(color: Colors.redAccent)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.tealAccent,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text("Save"),
-              onPressed: () {
-                final val = int.tryParse(controller.text);
-                if (val != null && val > 0) {
-                  saveSetting(val);
-                  Navigator.pop(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Enter a valid number!')),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _openAboutPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AboutPage()),
-    );
-  }
+  static const String appVersion = '1.0.0+1';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text("Settings"),
-        backgroundColor: const Color(0xFF1F1F1F),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            "Notification Reminder",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('About'),
+            subtitle: const Text('Information about this app'),
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'CTF Events',
+              applicationVersion: appVersion,
+              children: const [
+                Text('A simple app to browse and remind CTF events.'),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-
-          ...options.entries.map((entry) {
-            return Card(
-              color: const Color(0xFF1E1E1E),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: RadioListTile<int>(
-                activeColor: Colors.tealAccent,
-                title: Text(
-                  entry.key,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                value: entry.value,
-                groupValue: selectedMinutes,
-                onChanged: (val) {
-                  if (val != null) saveSetting(val);
-                },
-              ),
-            );
-          }),
-
-          // Custom Timer Card
-          const SizedBox(height: 12),
-          Card(
-            color: const Color(0xFF1E1E1E),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              leading: const Icon(Icons.timer_outlined, color: Colors.tealAccent),
-              title: const Text(
-                "Custom Timer",
-                style: TextStyle(color: Colors.white),
-              ),
-              subtitle: const Text(
-                "Set your own reminder in minutes",
-                style: TextStyle(color: Colors.white54),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 18),
-              onTap: _showCustomTimerDialog,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          Divider(color: Colors.white24),
-
-          // About Section
-          const SizedBox(height: 12),
-          ListTile(
-            leading: const Icon(Icons.info_outline, color: Colors.tealAccent),
-            title: const Text(
-              "About",
-              style: TextStyle(color: Colors.white),
-            ),
-            subtitle: const Text(
-              "Open source project • Tap to learn more",
-              style: TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-            onTap: _openAboutPage,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AboutPage extends StatelessWidget {
-  const AboutPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text("About"),
-        backgroundColor: const Color(0xFF1F1F1F),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: const [
-              Icon(Icons.flag_outlined, size: 80, color: Colors.tealAccent),
-              SizedBox(height: 20),
-              Text(
-                "CTF Reminder App",
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 12),
-              Text(
-                "This is an open-source project.\nHelp improve it by contributing on GitHub!",
-                style: TextStyle(color: Colors.white70, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-            ],
           ),
         ),
-      ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.alarm_add_outlined),
+            title: const Text('Reminder times'),
+            subtitle: const Text(
+              'Manage default reminder offsets applied to all reminders',
+            ),
+            onTap: () async {
+              final current = await ReminderPrefs.getOffsets();
+              List<int> offsets = List<int>.from(current);
+
+              await showDialog<void>(
+                context: context,
+                builder: (context) {
+                  final controller = TextEditingController();
+                  return StatefulBuilder(
+                    builder: (context, setState) {
+                      return AlertDialog(
+                        title: const Text(
+                          'Reminder times (minutes before start)',
+                        ),
+                        content: SizedBox(
+                          width: double.maxFinite,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                children: offsets
+                                    .map(
+                                      (m) => Chip(
+                                        label: Text(
+                                          m >= 60 ? '${m ~/ 60}h' : '$m min',
+                                        ),
+                                        onDeleted: () async {
+                                          offsets.remove(m);
+                                          setState(() {});
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: controller,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Enter minutes (e.g. 15)',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      final v = int.tryParse(controller.text);
+                                      if (v != null && v > 0) {
+                                        if (!offsets.contains(v)) {
+                                          offsets.add(v);
+                                          offsets.sort(
+                                            (a, b) => b.compareTo(a),
+                                          );
+                                          controller.clear();
+                                          setState(() {});
+                                        }
+                                      }
+                                    },
+                                    child: const Text('Add'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await ReminderPrefs.setOffsets(offsets);
+
+                              try {
+                                final Box<CtfEvent> eventsBox =
+                                    Hive.isBoxOpen('ctf_events')
+                                    ? Hive.box<CtfEvent>('ctf_events')
+                                    : await Hive.openBox<CtfEvent>(
+                                        'ctf_events',
+                                      );
+
+                                final Box<CtfEventDetail> detailsBox =
+                                    Hive.isBoxOpen('ctf_event_details')
+                                    ? Hive.box<CtfEventDetail>(
+                                        'ctf_event_details',
+                                      )
+                                    : await Hive.openBox<CtfEventDetail>(
+                                        'ctf_event_details',
+                                      );
+
+                                for (var ev in eventsBox.values) {
+                                  try {
+                                    if ((ev as dynamic).reminder == true) {
+                                      await NotificationService()
+                                          .cancelForEvent(ev.id);
+
+                                      CtfEventDetail? detail;
+                                      if (detailsBox.containsKey(ev.id)) {
+                                        detail = detailsBox.get(ev.id);
+                                      } else {
+                                        detail = CtfEventDetail(
+                                          id: ev.id,
+                                          title: ev.title,
+                                          organizers: ev.organizers,
+                                          ctfId: null,
+                                          description: ev.description,
+                                          url: ev.url,
+                                          ctftimeUrl: ev.ctftimeUrl,
+                                          logo: ev.logo,
+                                          format: ev.format,
+                                          formatId: ev.formatId,
+                                          onsite: ev.onsite,
+                                          restrictions: ev.restrictions,
+                                          weight: ev.weight,
+                                          participants: ev.participants,
+                                          location: ev.location,
+                                          liveFeed: ev.liveFeed,
+                                          isVotableNow: ev.isVotableNow,
+                                          publicVotable: ev.publicVotable,
+                                          prizes: ev.prizes,
+                                          start: ev.start,
+                                          finish: ev.finish,
+                                          durationSeconds: ev.durationSeconds,
+                                          isReminderSet: true,
+                                        );
+                                      }
+
+                                      if (detail != null) {
+                                        await NotificationService()
+                                            .scheduleForEvent(detail, offsets);
+                                      }
+                                    }
+                                  } catch (_) {}
+                                }
+                              } catch (_) {}
+
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Reminder times updated'),
+                                ),
+                              );
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            title: const Text(
+              'Delete cached data',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+            subtitle: const Text(
+              'Clear all saved Hive data (events & details)',
+            ),
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete all data?'),
+                  content: const Text(
+                    'This will remove all cached events and details. This action cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                try {
+                  if (Hive.isBoxOpen('ctf_events')) {
+                    final Box<CtfEvent> b = Hive.box<CtfEvent>('ctf_events');
+                    await b.clear();
+                  } else {
+                    final Box<CtfEvent> b = await Hive.openBox<CtfEvent>(
+                      'ctf_events',
+                    );
+                    await b.clear();
+                  }
+
+                  if (Hive.isBoxOpen('ctf_event_details')) {
+                    final Box<CtfEventDetail> b2 = Hive.box<CtfEventDetail>(
+                      'ctf_event_details',
+                    );
+                    await b2.clear();
+                  } else {
+                    final Box<CtfEventDetail> b2 =
+                        await Hive.openBox<CtfEventDetail>('ctf_event_details');
+                    await b2.clear();
+                  }
+
+                  try {
+                    await NotificationService().cancelAllScheduled();
+                  } catch (_) {}
+
+                  Provider.of<CardController>(
+                    context,
+                    listen: false,
+                  ).loadFromHive();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cached data deleted')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete data: $e')),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.verified_user),
+            title: const Text('Version'),
+            subtitle: const Text(appVersion),
+            onTap: () {},
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,32 +1,35 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_settings.dart';
+part of 'organizer.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserSettingsAdapter extends TypeAdapter<UserSettings> {
+class OrganizerAdapter extends TypeAdapter<Organizer> {
   @override
-  final int typeId = 1;
+  final int typeId = 2;
 
   @override
-  UserSettings read(BinaryReader reader) {
+  Organizer read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return UserSettings(
-      reminderMinutes: fields[0] as int,
+    return Organizer(
+      id: fields[0] as int,
+      name: fields[1] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, UserSettings obj) {
+  void write(BinaryWriter writer, Organizer obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.reminderMinutes);
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.name);
   }
 
   @override
@@ -35,7 +38,7 @@ class UserSettingsAdapter extends TypeAdapter<UserSettings> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserSettingsAdapter &&
+      other is OrganizerAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
